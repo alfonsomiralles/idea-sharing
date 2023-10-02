@@ -2,6 +2,7 @@ import graphene
 from graphql_auth.schema import UserQuery, MeQuery
 from graphql_auth import mutations
 from .mutations import CreateIdea, UpdateIdeaVisibility
+from .queries import Query as QueryIdeas
 
 class AuthMutation(graphene.ObjectType):
    register = mutations.Register.Field()
@@ -15,7 +16,7 @@ class AuthMutation(graphene.ObjectType):
    verify_token = mutations.VerifyToken.Field()
    refresh_token = mutations.RefreshToken.Field()
 
-class Query(UserQuery, MeQuery, graphene.ObjectType):
+class Query(QueryIdeas, UserQuery, MeQuery, graphene.ObjectType):
     pass
 
 class Mutation(AuthMutation, graphene.ObjectType):
