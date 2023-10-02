@@ -6,6 +6,8 @@ class AuthMutation(graphene.ObjectType):
    register = mutations.Register.Field()
    verify_account = mutations.VerifyAccount.Field()
    password_change = mutations.PasswordChange.Field()
+   send_password_reset_email = mutations.SendPasswordResetEmail.Field()
+   password_reset = mutations.PasswordReset.Field()
 
    # django-graphql-jwt inheritances
    token_auth = mutations.ObtainJSONWebToken.Field()
