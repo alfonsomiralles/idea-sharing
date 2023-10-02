@@ -24,7 +24,35 @@ class CreateIdea(graphene.Mutation):
             raise Exception('Not logged in!')
         idea = Idea.objects.create(user=user, text=text, visibility=visibility)
         return CreateIdea(success=True, idea=idea)
+
+class UpdateIdeaVisibility(graphene.Mutation):
+    """
+    Update the visibility of an existing idea.
+    """
+    class Arguments:
+        id = graphene.ID(required=True)
+        visibility = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    idea = graphene.Field(IdeaType)
+
+    def mutate(self, info, id: int, visibility: str) -> 'UpdateIdeaVisibility':
+        """
+        Update the visibility of an existing idea.
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
         
+        idea = Idea.objects.get(id=id)
+        if idea.user != user:
+            raise Exception('Not authorized!')
+        
+        idea.visibility = visibility
+        idea.save()
+
+        return UpdateIdeaVisibility(success=True, idea=idea)
+            
 class AuthMutation(graphene.ObjectType):
     register = mutations.Register.Field()
     verify_account = mutations.VerifyAccount.Field()
