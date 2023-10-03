@@ -2,6 +2,7 @@ import graphene
 from graphene_django.types import DjangoObjectType
 from users.models import User
 from .models import FollowRequest 
+from users.schema import UserType
 
 class FollowRequestType(DjangoObjectType):
     class Meta:
@@ -12,6 +13,8 @@ class Query(graphene.ObjectType):
     Query for the followers app.
     """
     follow_requests = graphene.List(FollowRequestType)
+    following = graphene.List(UserType)
+    followers = graphene.List(UserType)
 
     def resolve_follow_requests(self, info):
         """
@@ -21,6 +24,24 @@ class Query(graphene.ObjectType):
         if user.is_anonymous:
             raise Exception('Not logged in!')
         return FollowRequest.objects.filter(to_user=user)
+    
+    def resolve_following(self, info):
+        """
+        Retrieve the list of users that the authenticated user is following.
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+        return user.following.all()
+
+    def resolve_followers(self, info):
+        """
+        Retrieve the list of users that are following the authenticated user.
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+        return user.followers.all()
 
 class SendFollowRequest(graphene.Mutation):
     """
