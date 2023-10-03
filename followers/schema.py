@@ -131,8 +131,67 @@ class DenyFollowRequest(graphene.Mutation):
 
         follow_request.delete()
         return DenyFollowRequest(success=True)   
+class UnfollowUser(graphene.Mutation):
+    """
+    Unfollow another user.
+    """
+    class Arguments:
+        username_to_unfollow = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    def mutate(self, info, username_to_unfollow: str) -> 'UnfollowUser':
+        """
+        Unfollow another user.
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+
+        try:
+            target_user = User.objects.get(username=username_to_unfollow)
+        except User.DoesNotExist:
+            raise Exception('User does not exist!')
+
+        if target_user not in user.following.all():
+            return UnfollowUser(success=False, message='You are not following this user')
+
+        user.following.remove(target_user)
+        return UnfollowUser(success=True, message='Successfully unfollowed')
+    
+class RemoveFollower(graphene.Mutation):
+    """
+    Remove a follower.
+    """
+    class Arguments:
+        username_to_remove = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    def mutate(self, info, username_to_remove: str) -> 'RemoveFollower':
+        """
+        Remove a follower.
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+
+        try:
+            follower = User.objects.get(username=username_to_remove)
+        except User.DoesNotExist:
+            raise Exception('User does not exist!')
+
+        if follower not in user.followers.all():
+            return RemoveFollower(success=False, message='This user is not following you')
+
+        user.followers.remove(follower)
+        return RemoveFollower(success=True, message='Successfully removed follower')
 
 class Mutation(graphene.ObjectType):
     send_follow_request = SendFollowRequest.Field()
     approve_follow_request = ApproveFollowRequest.Field()
     deny_follow_request = DenyFollowRequest.Field()
+    unfollow_user = UnfollowUser.Field()
+    remove_follower = RemoveFollower.Field()
