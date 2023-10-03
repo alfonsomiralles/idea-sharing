@@ -36,6 +36,34 @@ class CreateIdea(graphene.Mutation):
         idea = Idea.objects.create(user=user, text=text, visibility=visibility)
         return CreateIdea(success=True, idea=idea)
 
+class DeleteIdea(graphene.Mutation):
+    """
+    Delete an existing idea.
+    """
+    class Arguments:
+        id = graphene.ID(required=True)
+
+    success = graphene.Boolean()
+
+    def mutate(self, info, id: int) -> 'DeleteIdea':
+        """
+        Delete an existing idea associated with the logged-in user.
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+
+        try:
+            idea = Idea.objects.get(id=id)
+        except Idea.DoesNotExist:
+            raise Exception('Idea does not exist!')
+
+        if idea.user != user:
+            raise Exception('Not authorized!')
+
+        idea.delete()
+        return DeleteIdea(success=True)
+    
 class UpdateIdeaVisibility(graphene.Mutation):
     """
     Update the visibility of an existing idea.
@@ -67,5 +95,6 @@ class UpdateIdeaVisibility(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     create_idea = CreateIdea.Field()
     update_idea_visibility = UpdateIdeaVisibility.Field()
+    delete_idea = DeleteIdea.Field() 
 
 
