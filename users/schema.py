@@ -11,12 +11,45 @@ class UserType(DjangoObjectType):
 class Query(UserQuery, MeQuery, graphene.ObjectType):
     pass
 
+class FollowUser(graphene.Mutation):
+    """
+    Allows a user to follow another user.
+    """
+    class Arguments:
+        username_to_follow = graphene.String(required=True)
+    
+    success = graphene.Boolean()
+    follower = graphene.Field(UserType)
+    following = graphene.Field(UserType)
+    
+    def mutate(self, info, username_to_follow: str) -> 'FollowUser':
+        """
+        Enable a user to follow another user by their username.
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+        
+        try:
+            to_follow = User.objects.get(username=username_to_follow)
+        except User.DoesNotExist:
+            raise Exception('User to follow does not exist!')
+        
+        user.following.add(to_follow)
+        user.save()
+        
+        return FollowUser(success=True, follower=user, following=to_follow)
+    
 class AuthMutation(graphene.ObjectType):
+    """
+    Authorization and authentication
+    """
     register = mutations.Register.Field()
     verify_account = mutations.VerifyAccount.Field()
     password_change = mutations.PasswordChange.Field()
     send_password_reset_email = mutations.SendPasswordResetEmail.Field()
     password_reset = mutations.PasswordReset.Field()
+    follow_user = FollowUser.Field()
 
     # django-graphql-jwt inheritances
     token_auth = mutations.ObtainJSONWebToken.Field()
