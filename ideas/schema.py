@@ -1,9 +1,20 @@
 import graphene
-from graphql_auth import mutations
-from .types import IdeaType
-from ideas.models import Idea
+from .models import Idea
+from graphene_django.types import DjangoObjectType
 
-# Custom mutation to create ideas
+class IdeaType(DjangoObjectType):
+    class Meta:
+        model = Idea
+
+class Query(graphene.ObjectType):
+    my_ideas = graphene.List(IdeaType)
+
+    def resolve_my_ideas(self, info):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+        return Idea.objects.filter(user=user).order_by('-created_at')
+    
 class CreateIdea(graphene.Mutation):
     """
     Create an idea with optional visibility setting.
@@ -52,17 +63,9 @@ class UpdateIdeaVisibility(graphene.Mutation):
         idea.save()
 
         return UpdateIdeaVisibility(success=True, idea=idea)
-            
-class AuthMutation(graphene.ObjectType):
-    register = mutations.Register.Field()
-    verify_account = mutations.VerifyAccount.Field()
-    password_change = mutations.PasswordChange.Field()
-    send_password_reset_email = mutations.SendPasswordResetEmail.Field()
-    password_reset = mutations.PasswordReset.Field()
 
-    # django-graphql-jwt inheritances
-    token_auth = mutations.ObtainJSONWebToken.Field()
-    verify_token = mutations.VerifyToken.Field()
-    refresh_token = mutations.RefreshToken.Field()
-
+class Mutation(graphene.ObjectType):
     create_idea = CreateIdea.Field()
+    update_idea_visibility = UpdateIdeaVisibility.Field()
+
+
