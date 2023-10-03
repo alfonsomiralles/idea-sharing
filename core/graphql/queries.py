@@ -1,7 +1,7 @@
 import graphene
 from graphql_auth.schema import UserQuery, MeQuery
 from .types import IdeaType
-from users.models import Idea
+from ideas.models import Idea
 
 class Query(UserQuery, MeQuery, graphene.ObjectType):
     """
