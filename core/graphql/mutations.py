@@ -1,7 +1,7 @@
 import graphene
 from graphql_auth import mutations
 from .types import IdeaType
-from users.models import Idea
+from ideas.models import Idea
 
 # Custom mutation to create ideas
 class CreateIdea(graphene.Mutation):

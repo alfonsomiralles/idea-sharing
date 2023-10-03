@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Idea
+from .models import User
 from django.apps import apps
 
 class UserAdmin(admin.ModelAdmin):
@@ -8,13 +8,6 @@ class UserAdmin(admin.ModelAdmin):
     list_filter = ('is_staff', 'is_active', 'last_login')
 
 admin.site.register(User, UserAdmin)
-
-class IdeaAdmin(admin.ModelAdmin):
-    list_display = ('user', 'text', 'created_at', 'visibility')
-    search_fields = ('user__username', 'text')
-    list_filter = ('visibility', 'created_at')
-
-admin.site.register(Idea, IdeaAdmin)
 
 app = apps.get_app_config('graphql_auth')
 
