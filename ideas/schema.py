@@ -1,20 +1,56 @@
 import graphene
 from .models import Idea
 from graphene_django.types import DjangoObjectType
+from users.models import User
 
 class IdeaType(DjangoObjectType):
     class Meta:
         model = Idea
 
 class Query(graphene.ObjectType):
+
     my_ideas = graphene.List(IdeaType)
+    user_ideas = graphene.List(IdeaType, username=graphene.String())
 
     def resolve_my_ideas(self, info):
+        """
+        Retrieve the list of ideas for the owner user.
+        """
+        user = info.context.user
+
+        if user.is_anonymous:
+            raise Exception('Not logged in!')
+        
+        return Idea.objects.filter(user=user).order_by('-created_at')
+    
+    def resolve_user_ideas(self, info, username: str):
+        """
+        Retrieve the list of ideas for a specific user while 
+        respecting idea visibility rules.
+        """
         user = info.context.user
         if user.is_anonymous:
             raise Exception('Not logged in!')
-        return Idea.objects.filter(user=user).order_by('-created_at')
+
+        try:
+            target_user = User.objects.get(username=username)
+            
+        except User.DoesNotExist:
+            raise Exception('User does not exist!')
+
+        is_following = target_user in user.following.all()
+
+        if target_user == user:
+            return Idea.objects.filter(user=target_user).order_by('-created_at')
     
+        elif is_following:
+            return Idea.objects.filter(user=target_user).exclude(
+                visibility='private').order_by('-created_at')
+    
+        else:
+            return Idea.objects.filter(
+                user=target_user, visibility='public').order_by('-created_at')
+         
 class CreateIdea(graphene.Mutation):
     """
     Create an idea with optional visibility setting.
