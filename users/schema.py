@@ -2,13 +2,26 @@ import graphene
 from graphql_auth import mutations
 from graphene_django.types import DjangoObjectType
 from users.models import User
+from django.db.models import Q
 from graphql_auth.schema import UserQuery, MeQuery
 
 class UserType(DjangoObjectType):
     class Meta:
         model = User
 class Query(UserQuery, MeQuery, graphene.ObjectType):
-    pass  
+
+    search_users = graphene.List(UserType, search_text=graphene.String())
+
+    def resolve_search_users(self, info, search_text: str):
+        """
+        Search for users by their username, or part of it.
+        
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('You must be logged to search for users.')
+        
+        return User.objects.filter(Q(username__icontains=search_text))
     
 class AuthMutation(graphene.ObjectType):
     """
