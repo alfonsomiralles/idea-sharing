@@ -11,6 +11,7 @@ class Query(graphene.ObjectType):
 
     my_ideas = graphene.List(IdeaType)
     user_ideas = graphene.List(IdeaType, username=graphene.String())
+    timeline = graphene.List(IdeaType)
 
     def resolve_my_ideas(self, info):
         """
@@ -51,6 +52,24 @@ class Query(graphene.ObjectType):
             return Idea.objects.filter(
                 user=target_user, visibility='public').order_by('-created_at')
          
+    def resolve_timeline(self, info):
+        """
+        Retrieve a timeline of ideas for the authenticated user, 
+        including their own ideas and ideas from users they follow.
+        """
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('You must be logged in order to view your timeline.')
+        
+        following_ideas = Idea.objects.filter(
+            user__in=user.following.all()
+        ).exclude(visibility='private')
+
+        my_ideas = Idea.objects.filter(user=user)
+        combined_ideas = my_ideas | following_ideas
+
+        return combined_ideas.order_by('-created_at')
+
 class CreateIdea(graphene.Mutation):
     """
     Create an idea with optional visibility setting.
