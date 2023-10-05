@@ -2,6 +2,7 @@ import graphene
 from .models import Idea
 from graphene_django.types import DjangoObjectType
 from users.models import User
+from core.utils import ensure_authenticated
 
 class IdeaType(DjangoObjectType):
     class Meta:
@@ -18,9 +19,8 @@ class Query(graphene.ObjectType):
         Retrieve the list of ideas for the owner user.
         """
         user = info.context.user
-
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
+        
         
         return Idea.objects.filter(user=user).order_by('-created_at')
     
@@ -30,8 +30,7 @@ class Query(graphene.ObjectType):
         respecting idea visibility rules.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
 
         try:
             target_user = User.objects.get(username=username)
@@ -86,8 +85,7 @@ class CreateIdea(graphene.Mutation):
         Create a new idea and associate it with the logged-in user.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
         idea = Idea.objects.create(user=user, text=text, visibility=visibility)
         return CreateIdea(success=True, idea=idea)
 
@@ -105,8 +103,7 @@ class DeleteIdea(graphene.Mutation):
         Delete an existing idea associated with the logged-in user.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
 
         try:
             idea = Idea.objects.get(id=id)
@@ -135,8 +132,7 @@ class UpdateIdeaVisibility(graphene.Mutation):
         Update the visibility of an existing idea.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
         
         idea = Idea.objects.get(id=id)
         if idea.user != user:
