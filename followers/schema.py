@@ -3,6 +3,7 @@ from graphene_django.types import DjangoObjectType
 from users.models import User
 from .models import FollowRequest 
 from users.schema import UserType
+from core.utils import ensure_authenticated
 
 class FollowRequestType(DjangoObjectType):
     class Meta:
@@ -21,8 +22,7 @@ class Query(graphene.ObjectType):
         Retrieve follow requests received by the logged-in user.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
         return FollowRequest.objects.filter(to_user=user)
     
     def resolve_following(self, info):
@@ -30,8 +30,7 @@ class Query(graphene.ObjectType):
         Retrieve the list of users that the authenticated user is following.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
         return user.following.all()
 
     def resolve_followers(self, info):
@@ -39,8 +38,7 @@ class Query(graphene.ObjectType):
         Retrieve the list of users that are following the authenticated user.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
         return user.followers.all()
 
 class SendFollowRequest(graphene.Mutation):
@@ -57,8 +55,7 @@ class SendFollowRequest(graphene.Mutation):
         Send a follow request.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
         
         try:
             target_user = User.objects.get(username=username_to_follow)
@@ -85,8 +82,7 @@ class ApproveFollowRequest(graphene.Mutation):
         Approve a follow request.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
         
         try:
             requester = User.objects.get(username=username_to_approve)
@@ -116,8 +112,7 @@ class DenyFollowRequest(graphene.Mutation):
         Deny a follow request.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
         
         try:
             requester = User.objects.get(username=username_to_deny)
@@ -146,8 +141,7 @@ class UnfollowUser(graphene.Mutation):
         Unfollow another user.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
 
         try:
             target_user = User.objects.get(username=username_to_unfollow)
@@ -175,8 +169,7 @@ class RemoveFollower(graphene.Mutation):
         Remove a follower.
         """
         user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Not logged in!')
+        ensure_authenticated(user)
 
         try:
             follower = User.objects.get(username=username_to_remove)
