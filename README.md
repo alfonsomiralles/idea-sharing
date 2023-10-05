@@ -24,6 +24,8 @@ Before you begin, make sure you have the following installed:
 - Docker
 - Docker Compose
 - PostgreSQL
+- Python 3.10.11
+- Django 3.2
 
 ## Getting Started
 To set up the project, follow these steps:
@@ -31,6 +33,32 @@ To set up the project, follow these steps:
 ## Clone the repository:
 ```bash
 git clone https://github.com/alfonsomiralles/idea-sharing.git
+```
+
+## Environment Setup
+### Virtual Environment
+
+Before running the project, set up a Python virtual environment:
+
+```bash
+python -m venv venv
+```
+
+## Enviroment Variables
+Create a .env file in the project root to set the following variables:
+```env
+# Django settings
+SECRET_KEY:Your Django secret key
+DEBUG=1 # Set to 0 in production
+# Allowed hosts
+DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 172.19.0.2 [::1]
+# Database settings
+SQL_ENGINE=django.db.backends.postgresql
+SQL_HOST=db
+SQL_PORT=5432
+POSTGRES_DB=Your PostgreSQL database name
+POSTGRES_USER=Your PostgreSQL user
+POSTGRES_PASSWORD=Your PostgreSQL password
 ```
 
 ## Build the Docker images:
